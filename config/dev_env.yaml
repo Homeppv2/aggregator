@@ -1,0 +1,18 @@
+server:
+  debug: true
+  host: localhost
+  port: "8005"
+publisher:
+  protocol: amqp
+  host: localhost
+  port: "5672"
+  username: guest
+  password: guest
+memory_storage:
+  host: localhost
+  port: "6379"
+  key_prefix: "controllers"
+api:
+  protocol: http
+  host: localhost
+  port: "8000"
