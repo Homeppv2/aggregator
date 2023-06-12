@@ -20,7 +20,7 @@ type Server struct {
 
 type Event struct {
 	Type    string `json:"type"`
-	Message int    `json:"message"`
+	Message any    `json:"message"`
 }
 
 type Error struct {
