@@ -2,55 +2,126 @@ package app
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
-	"os"
-	"os/signal"
-	"time"
 
-	"homepp/aggregator/internal"
+	"homepp/aggregator/internal/controller"
+	"homepp/aggregator/internal/gateway"
+	"nhooyr.io/websocket"
 )
 
-func Run() {
-	cfg := GetConfig()
-	eventPublisher, err := internal.NewEventPublisher(cfg.Publisher.URL())
+type Server struct {
+	Logf           func(f string, v ...interface{})
+	EventPublisher *controller.EventPublisher
+	SocketGateway  *gateway.SocketGateway
+}
+
+type Event struct {
+	Type    string `json:"type"`
+	Message any    `json:"message"`
+}
+
+type Error struct {
+	Type   string `json:"type"`
+	Detail string `json:"detail"`
+}
+
+func (s Server) Serve(w http.ResponseWriter, r *http.Request) {
+	ctx := context.Background()
+	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{InsecureSkipVerify: true})
 	if err != nil {
-		log.Fatal(err)
+		s.Logf("%v", err)
+		return
 	}
-	socketGateway := internal.NewSocketGateway(
-		cfg.MemoryStorage.KeyPrefix,
-		cfg.MemoryStorage.URL(),
-	)
+	defer conn.Close(websocket.StatusInternalError, "the sky is falling")
+
+	hwKey := r.Header.Get("Hardwarekey")
+	if hwKey == "" {
+		errMsg, _ := json.Marshal(Error{"error", "hardware key not not send"})
+		conn.Write(ctx, 1, errMsg)
+		log.Println(string(errMsg))
+		return
+	}
+
+	clientID, err := getClientID(hwKey)
 	if err != nil {
-		log.Fatal(err)
+		errMsg, _ := json.Marshal(Error{"error", err.Error()})
+		conn.Write(ctx, 1, errMsg)
+		log.Println(string(errMsg))
+		return
 	}
 
-	server := &http.Server{
-		Addr: cfg.Server.URL(),
-		Handler: internal.Server{
-			Logf:           log.Printf,
-			EventPublisher: eventPublisher,
-			SocketGateway:  socketGateway,
-		},
-		ReadTimeout:  time.Second * 10,
-		WriteTimeout: time.Second * 10,
+	s.SocketGateway.SetConnected(ctx, hwKey)
+	for {
+		err = processEvent(r.Context(), conn, s.EventPublisher, clientID)
+		if websocket.CloseStatus(err) == websocket.StatusNormalClosure {
+			return
+		}
+		if err != nil {
+			s.Logf("Connection failed %v: %v", r.RemoteAddr, err)
+			s.SocketGateway.SetDisconnected(ctx, hwKey)
+			jsonData, _ := json.Marshal(&Error{"disconnect", hwKey})
+			s.EventPublisher.PublishMessage(jsonData, clientID)
+			return
+		}
 	}
-	errCh := make(chan error, 1)
-	go func() {
-		errCh <- server.ListenAndServe()
-	}()
+}
 
-	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, os.Interrupt)
-	select {
-	case err := <-errCh:
-		log.Printf("failed to serve: %v", err)
-	case sig := <-sigCh:
-		log.Printf("terminating: %v", sig)
+func processEvent(
+	ctx context.Context,
+	c *websocket.Conn,
+	ep *controller.EventPublisher,
+	clientID string,
+) error {
+	msgType, reader, err := c.Reader(ctx)
+	if err != nil {
+		return err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
-	defer cancel()
+	var event Event
+	err = json.NewDecoder(reader).Decode(&event)
+	if err != nil {
+		jsonData, _ := json.Marshal(&Error{"error", "invalid message format"})
+		c.Write(ctx, msgType, jsonData)
+	}
 
-	server.Shutdown(ctx)
+	jsonData, _ := json.Marshal(event)
+	ep.PublishMessage(jsonData, clientID)
+
+	return err
+}
+
+func getClientID(hwKey string) (string, error) {
+	config := GetConfig()
+	apiURL := fmt.Sprintf("%s/controllers/client?hw_key=%s", config.API.URL(), hwKey)
+	req, err := http.NewRequest("GET", apiURL, nil)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	var payload map[string]string
+	err = json.NewDecoder(resp.Body).Decode(&payload)
+	if err != nil {
+		return "", err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("unexpected status code: %v", resp.StatusCode)
+	}
+
+	clientID, ok := payload["client_id"]
+	if !ok {
+		return "", fmt.Errorf("hardware key not registered")
+	}
+
+	return clientID, nil
 }
