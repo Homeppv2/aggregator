@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"context"
@@ -9,32 +9,24 @@ import (
 	"time"
 
 	"homepp/aggregator/internal"
-	"homepp/aggregator/internal/config"
 )
 
-func main() {
-	err := run()
+func Run() {
+	cfg := GetConfig()
+	eventPublisher, err := internal.NewEventPublisher(cfg.Publisher.URL())
 	if err != nil {
 		log.Fatal(err)
 	}
-}
-
-func run() error {
-	config := config.GetConfig()
-	eventPublisher, err := internal.NewEventPublisher(config.Publisher.URL())
-	if err != nil {
-		return err
-	}
 	socketGateway := internal.NewSocketGateway(
-		config.MemoryStorage.KeyPrefix,
-		config.MemoryStorage.URL(),
+		cfg.MemoryStorage.KeyPrefix,
+		cfg.MemoryStorage.URL(),
 	)
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
 
 	server := &http.Server{
-		Addr: config.Server.URL(),
+		Addr: cfg.Server.URL(),
 		Handler: internal.Server{
 			Logf:           log.Printf,
 			EventPublisher: eventPublisher,
@@ -43,22 +35,22 @@ func run() error {
 		ReadTimeout:  time.Second * 10,
 		WriteTimeout: time.Second * 10,
 	}
-	errc := make(chan error, 1)
+	errCh := make(chan error, 1)
 	go func() {
-		errc <- server.ListenAndServe()
+		errCh <- server.ListenAndServe()
 	}()
 
-	sigc := make(chan os.Signal, 1)
-	signal.Notify(sigc, os.Interrupt)
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, os.Interrupt)
 	select {
-	case err := <-errc:
+	case err := <-errCh:
 		log.Printf("failed to serve: %v", err)
-	case sig := <-sigc:
+	case sig := <-sigCh:
 		log.Printf("terminating: %v", sig)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
-	return server.Shutdown(ctx)
+	server.Shutdown(ctx)
 }

@@ -7,8 +7,7 @@ import (
 	"log"
 	"net/http"
 
-	"homepp/aggregator/internal/config"
-
+	"homepp/aggregator/internal/app"
 	"nhooyr.io/websocket"
 )
 
@@ -94,7 +93,7 @@ func processEvent(
 }
 
 func getClientID(hwKey string) (string, error) {
-	config := config.GetConfig()
+	config := app.GetConfig()
 	apiURL := fmt.Sprintf("%s/controllers/client?hw_key=%s", config.API.URL(), hwKey)
 	req, err := http.NewRequest("GET", apiURL, nil)
 	if err != nil {
