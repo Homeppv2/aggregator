@@ -68,8 +68,8 @@ func (s ServerConfig) URL() string {
 
 var instance *Config
 var once sync.Once
-var devConfigPath string = "../../config/dev_env.yaml"
-var prodConfigPath string = "../../config/prod_env.yaml"
+var devConfigPath string = "config/dev_env.yaml"
+var prodConfigPath string = "config/prod_env.yaml"
 
 func GetConfig() *Config {
 	once.Do(func() {

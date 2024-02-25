@@ -3,27 +3,30 @@ FROM golang:latest as build
 
 WORKDIR /app
 
-COPY * .
+COPY . .
 
 RUN go mod download
 
 
 #COPY config ./config
 #USER nonroot:nonroot
-WORKDIR /app/cmd/app
-RUN go build -o ./server main.go
+RUN go build -o ./server ./cmd/app/main.go
 
 # Deploy
 #FROM gcr.io/distroless/base-debian10
 #WORKDIR /app
 #COPY --from=build server ./
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
-RUN apt-get update
-RUN apt-get install -y curl
+RUN apt update
+# RUN apt-get install -y curl
+# RUN apt install libc6
 
-COPY --from=build /app/server .
+WORKDIR /app
+
+COPY --from=build /app/config ./config
+COPY --from=build /app/server ./server
 # COPY ./entrypoint.sh /usr/bin/entrypoint.sh
 
 # ENTRYPOINT [ "entrypoint.sh" ]
-CMD ["/server"]
+CMD ["/app/server"]
