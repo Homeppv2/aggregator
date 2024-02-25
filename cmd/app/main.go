@@ -8,14 +8,13 @@ import (
 	"os/signal"
 	"time"
 
-	"homepp/aggregator/internal"
-	"homepp/aggregator/internal/app"
-	"homepp/aggregator/internal/controller"
-	"homepp/aggregator/internal/gateway"
+	"aggregator/internal/app"
+	"aggregator/internal/controller"
+	"aggregator/internal/gateway"
 )
 
 func main() {
-	app.Run()
+	run()
 }
 
 func run() {
@@ -34,7 +33,7 @@ func run() {
 
 	server := &http.Server{
 		Addr: cfg.Server.URL(),
-		Handler: internal.Server{
+		Handler: app.Server{
 			Logf:           log.Printf,
 			EventPublisher: eventPublisher,
 			SocketGateway:  socketGateway,

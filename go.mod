@@ -1,4 +1,4 @@
-module homepp/aggregator
+module aggregator
 
 go 1.20
 

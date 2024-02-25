@@ -7,8 +7,8 @@ import (
 	"log"
 	"net/http"
 
-	"homepp/aggregator/internal/controller"
-	"homepp/aggregator/internal/gateway"
+	"aggregator/internal/controller"
+	"aggregator/internal/gateway"
 	"nhooyr.io/websocket"
 )
 
@@ -28,7 +28,7 @@ type Error struct {
 	Detail string `json:"detail"`
 }
 
-func (s Server) Serve(w http.ResponseWriter, r *http.Request) {
+func (s Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{InsecureSkipVerify: true})
 	if err != nil {
