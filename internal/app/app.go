@@ -40,30 +40,37 @@ func (s Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer conn.Close(websocket.StatusInternalError, "the sky is falling")
-
+	s.Logf("connected")
+	/*
+		ctxClose := conn.CloseRead(ctx)
+		if err != nil {
+			errMsg, _ := json.Marshal(&Error{"error", err.Error()})
+			conn.Close(websocket.StatusUnsupportedData, string(errMsg))
+			log.Println(string(errMsg))
+			return
+		}
+	*/
 	_, reader, err := conn.Reader(ctx)
-	ctxClose := conn.CloseRead(ctx)
-	if err != nil {
-		errMsg, _ := json.Marshal(&Error{"error", err.Error()})
-		conn.Close(websocket.StatusUnsupportedData, string(errMsg))
-		log.Println(string(errMsg))
-		return
-	}
+	s.Logf("start cheking data")
 	t := time.NewTicker(5 * time.Second)
 	for {
 		select {
-		case <-ctxClose.Done():
-			conn.Close(websocket.StatusNormalClosure, "ok")
-			return
+		/*
+			case <-ctxClose.Done():
+				// s.Logf("closed connection")
+				// conn.Close(websocket.StatusNormalClosure, "ok")
+				// return
+				time.Sleep(5 * time.Second)
+		*/
 		case <-t.C:
 			var msgZiro entitys.MessangeTypeZiroJson
 			err = json.NewDecoder(reader).Decode(&msgZiro)
 			// нормально пофиксить
+			s.Logf("%s", msgZiro)
 			if err != nil {
 				errMsg, _ := json.Marshal(&Error{"error", err.Error()})
-				conn.Close(websocket.StatusUnsupportedData, string(errMsg))
 				log.Println(string(errMsg))
-				return
+				continue
 			}
 			var id string
 			if msgZiro.One != nil {
@@ -75,6 +82,7 @@ func (s Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if msgZiro.Three != nil {
 				id, err = getControlerID(msgZiro.Two.Type, msgZiro.Two.Number)
 			}
+			s.Logf("getted id controller")
 			err = processEvent(r.Context(), msgZiro, s.EventPublisher, id)
 			if err != nil {
 
