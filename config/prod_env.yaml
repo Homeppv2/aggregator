@@ -8,10 +8,6 @@ publisher:
   port: "5672"
   username: guest
   password: guest
-memory_storage:
-  host: redis
-  port: "6379"
-  key_prefix: "controllers"
 api:
   protocol: http
   host: api

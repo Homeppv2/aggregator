@@ -1,6 +1,6 @@
-module aggregator
+module github.com/Homeppv2/aggregator
 
-go 1.20
+go 1.21.5
 
 require (
 	github.com/ThreeDotsLabs/watermill v1.2.0
@@ -12,6 +12,7 @@ require (
 
 require (
 	github.com/BurntSushi/toml v1.1.0 // indirect
+	github.com/Homeppv2/entitys v0.0.0-20240328163721-e8d5cfed94fd
 	github.com/cenkalti/backoff/v3 v3.2.2 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
