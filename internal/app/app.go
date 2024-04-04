@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Homeppv2/aggregator/internal/controller"
+	"github.com/Homeppv2/aggregator-go/internal/controller"
 	"github.com/Homeppv2/entitys"
 	"nhooyr.io/websocket"
 )

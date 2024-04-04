@@ -9,8 +9,8 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/Homeppv2/aggregator/internal/app"
-	"github.com/Homeppv2/aggregator/internal/controller"
+	"github.com/Homeppv2/aggregator-go/internal/app"
+	"github.com/Homeppv2/aggregator-go/internal/controller"
 )
 
 func main() {
