@@ -24,8 +24,6 @@ RUN apt update
 
 WORKDIR /app
 
-COPY --from=build /app/config ./config
-COPY --from=build /app/server ./server
 # COPY ./entrypoint.sh /usr/bin/entrypoint.sh
 
 # ENTRYPOINT [ "entrypoint.sh" ]
