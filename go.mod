@@ -1,4 +1,4 @@
-module github.com/Homeppv2/aggregator
+module github.com/Homeppv2/aggregator-go
 
 go 1.21.5
 
