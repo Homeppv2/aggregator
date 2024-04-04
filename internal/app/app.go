@@ -71,7 +71,7 @@ func (s Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				id, err = getControlerID(msgZiro.Two.Type, msgZiro.Two.Number)
 			}
 			if msgZiro.Three != nil {
-				id, err = getControlerID(msgZiro.Two.Type, msgZiro.Two.Number)
+				id, err = getControlerID(msgZiro.Three.Type, msgZiro.Three.Number)
 			}
 			s.Logf("getted id controller")
 			err = processEvent(r.Context(), msgZiro, s.EventPublisher, id)
