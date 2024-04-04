@@ -73,7 +73,7 @@ func (s Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if msgZiro.Three != nil {
 				id, err = getControlerID(msgZiro.Three.Type, msgZiro.Three.Number)
 			}
-			s.Logf("getted id controller")
+			s.Logf("gettet id controller = %s", id)
 			err = processEvent(r.Context(), msgZiro, s.EventPublisher, id)
 			if err != nil {
 				errMsg, _ := json.Marshal(&Error{"error", err.Error()})

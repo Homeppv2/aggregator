@@ -23,7 +23,7 @@ RUN apt update
 # RUN apt install libc6
 
 WORKDIR /app
-
+COPY --from=build /app/server ./server
 # COPY ./entrypoint.sh /usr/bin/entrypoint.sh
 
 # ENTRYPOINT [ "entrypoint.sh" ]

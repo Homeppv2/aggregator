@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/ThreeDotsLabs/watermill"
@@ -13,8 +12,10 @@ type EventPublisher struct {
 	publisher *amqp.Publisher
 }
 
+var queueSuffix = "ctrls"
+
 func NewEventPublisher(amqpURI string) (*EventPublisher, error) {
-	amqpConfig := amqp.NewDurableQueueConfig(amqpURI)
+	amqpConfig := amqp.NewDurablePubSubConfig(amqpURI, amqp.GenerateQueueNameTopicNameWithSuffix(queueSuffix))
 	amqpPublisher, err := amqp.NewPublisher(amqpConfig, watermill.NewStdLogger(true, true))
 	if err != nil {
 		log.Fatalf("Connection to amqp failed: %v", err)
@@ -25,11 +26,7 @@ func NewEventPublisher(amqpURI string) (*EventPublisher, error) {
 func (e *EventPublisher) PublishMessage(event []byte, queue string) {
 	uuid := watermill.NewUUID()
 	msg := message.NewMessage(uuid, event)
-	if err := e.publisher.Publish(makeQueueTitle(queue), msg); err != nil {
+	if err := e.publisher.Publish(queue, msg); err != nil {
 		log.Printf("Publish failed: %v. Msg uuid: %s", err, uuid)
 	}
-}
-
-func makeQueueTitle(title string) string {
-	return fmt.Sprintf("client_%s", title)
 }
