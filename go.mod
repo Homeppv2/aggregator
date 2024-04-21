@@ -5,16 +5,15 @@ go 1.21.5
 require (
 	github.com/ThreeDotsLabs/watermill v1.3.5
 	github.com/ThreeDotsLabs/watermill-amqp/v2 v2.1.1
-	nhooyr.io/websocket v1.8.10
+	nhooyr.io/websocket v1.8.11
 )
 
-require github.com/Homeppv2/api-go v1.0.1 // indirect
 
 require (
-	github.com/Homeppv2/entitys v0.0.0-20240328163721-e8d5cfed94fd
+	github.com/Homeppv2/entitys v0.0.0-20240414182336-64a38be84d08
 	github.com/cenkalti/backoff/v3 v3.2.2 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
-	github.com/google/uuid v1.4.0 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
