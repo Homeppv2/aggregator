@@ -47,14 +47,13 @@ func (s Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for {
 		select {
 		case <-t.C:
-			_, reader, err := conn.Reader(ctx)
+			_, data, err := conn.Read(ctx)
 			if err != nil {
 				errMsg, _ := json.Marshal(&Error{"error", err.Error()})
 				log.Println(string(errMsg))
 				continue
 			}
 			var msgZiro entitys.MessangeTypeZiroJson
-			data := readData(reader)
 			err = json.Unmarshal(data, &msgZiro)
 			// нормально пофиксить
 			s.Logf("%s", msgZiro)
