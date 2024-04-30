@@ -13,7 +13,7 @@ type EventPublisher struct {
 }
 
 func NewEventPublisher(amqpURI string) (*EventPublisher, error) {
-	amqpConfig := amqp.NewDurableQueueConfig(amqpURI)
+	amqpConfig := amqp.NewDurablePubSubConfig(amqpURI, nil)
 	amqpPublisher, err := amqp.NewPublisher(amqpConfig, watermill.NewStdLogger(true, true))
 	if err != nil {
 		log.Fatalf("Connection to amqp failed: %v", err)
