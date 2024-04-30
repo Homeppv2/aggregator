@@ -12,10 +12,8 @@ type EventPublisher struct {
 	publisher *amqp.Publisher
 }
 
-var queueSuffix = "ctrls"
-
 func NewEventPublisher(amqpURI string) (*EventPublisher, error) {
-	amqpConfig := amqp.NewDurablePubSubConfig(amqpURI, amqp.GenerateQueueNameTopicNameWithSuffix(queueSuffix))
+	amqpConfig := amqp.NewDurableQueueConfig(amqpURI)
 	amqpPublisher, err := amqp.NewPublisher(amqpConfig, watermill.NewStdLogger(true, true))
 	if err != nil {
 		log.Fatalf("Connection to amqp failed: %v", err)
