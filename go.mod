@@ -8,9 +8,8 @@ require (
 	nhooyr.io/websocket v1.8.11
 )
 
-
 require (
-	github.com/Homeppv2/entitys v0.0.0-20240414182336-64a38be84d08
+	github.com/Homeppv2/entitys v0.0.0-20240430204756-804c09ab0764
 	github.com/cenkalti/backoff/v3 v3.2.2 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/uuid v1.6.0 // indirect
