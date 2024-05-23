@@ -62,15 +62,24 @@ func (s Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				log.Println(string(errMsg))
 				continue
 			}
+
+			if msgZiro.RequestAuth == nil {
+				continue
+			}
 			var id string
 			if msgZiro.One != nil {
-				id, err = getControlerID(msgZiro.One.Type, msgZiro.One.Number)
+				id, err = getControlerID(msgZiro.One.Type, msgZiro.One.Number, msgZiro.RequestAuth.Email, msgZiro.RequestAuth.Password)
 			}
 			if msgZiro.Two != nil {
-				id, err = getControlerID(msgZiro.Two.Type, msgZiro.Two.Number)
+				id, err = getControlerID(msgZiro.Two.Type, msgZiro.Two.Number, msgZiro.RequestAuth.Email, msgZiro.RequestAuth.Password)
 			}
 			if msgZiro.Three != nil {
-				id, err = getControlerID(msgZiro.Three.Type, msgZiro.Three.Number)
+				id, err = getControlerID(msgZiro.Three.Type, msgZiro.Three.Number, msgZiro.RequestAuth.Email, msgZiro.RequestAuth.Password)
+			}
+			if err != nil {
+				errMsg, _ := json.Marshal(&Error{"error", err.Error()})
+				log.Println(string(errMsg))
+				continue
 			}
 			s.Logf("gettet id controller = %s", id)
 			err = processEvent(r.Context(), msgZiro, s.EventPublisher, id)
@@ -93,7 +102,7 @@ func processEvent(
 	return err
 }
 
-func getControlerID(typecontroler int, number int) (string, error) {
+func getControlerID(typecontroler int, number int, email, password string) (string, error) {
 	apiURL := fmt.Sprintf("%s/getidcontroller", fmt.Sprintf("%s://%s:%s", os.Getenv("API_PROTOCOL"), os.Getenv("API_HOST"), os.Getenv("API_PORT")))
 	req, err := http.NewRequest("GET", apiURL, nil)
 	if err != nil {
@@ -101,6 +110,8 @@ func getControlerID(typecontroler int, number int) (string, error) {
 	}
 	req.Header.Set("type", strconv.Itoa(typecontroler))
 	req.Header.Set("number", strconv.Itoa(number))
+	req.Header.Set("email", email)
+	req.Header.Set("password", password)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -108,6 +119,9 @@ func getControlerID(typecontroler int, number int) (string, error) {
 		return "", err
 	}
 	str := resp.Header.Get("idcontroller")
+	if str == "-1" {
+		return "", errors.New("403")
+	}
 	if str == "" {
 		return "", errors.New("не получен айди")
 	}
